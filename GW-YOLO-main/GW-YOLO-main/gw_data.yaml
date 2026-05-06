@@ -1,0 +1,7 @@
+path: F:\python\yolo\GW-YOLO-main\GW-YOLO-main
+train: images
+val: val\images
+
+nc: 2
+
+names: ['chirp', 'noise']

@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+ENV/
+
+# YOLO / Ultralytics 相关
+ultralytics-main/
+ultralytics26-main/
+datasets/
+*.pt
+*.pth
+*.onnx
+*.engine
+*.weights
+
+# IDE / 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 大文件
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+*.mp4
+*.avi
+*.jpg
+*.png
