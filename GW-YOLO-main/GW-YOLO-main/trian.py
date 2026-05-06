@@ -7,7 +7,7 @@ def main():
     model = YOLO("yolo26n.pt")
     print("✓ 模型加载完成\n")
 
-    # 3. 开始训练
+    # 开始训练
     print("开始训练...")
     print("-" * 50)
 
@@ -16,7 +16,7 @@ def main():
         epochs=500,  # 训练轮数
         imgsz=640,  # 输入图像尺寸
         batch=16,  # 批大小（根据 GPU 显存调整）
-        workers=4,  # 数据加载线程数
+        workers=8,  # 数据加载线程数
         lr0=0.01,  # 初始学习率
         patience=50,  # 早停轮数（50轮无提升则停止）
         save=True,  # 保存训练检查点
