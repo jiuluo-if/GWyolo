@@ -1,0 +1,4 @@
+# Core runtime dependencies
+ultralytics
+opencv-python
+numpy

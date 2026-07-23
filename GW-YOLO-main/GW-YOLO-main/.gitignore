@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Ultralytics generated artifacts
+runs/
+result/
+*.cache
+
+# Model checkpoints (track a release model only when explicitly required)
+*.pt
+*.onnx
+*.engine
+
+# Local datasets and preprocessing inputs/outputs
+imgs/
+train/images/
+val/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
