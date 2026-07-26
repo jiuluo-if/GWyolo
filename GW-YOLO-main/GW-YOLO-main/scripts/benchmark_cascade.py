@@ -90,6 +90,18 @@ def classification_metrics(
     }
 
 
+def classification_metrics_from_decisions(
+    decisions: dict[str, bool],
+    truth: dict[str, bool],
+) -> dict[str, int | float]:
+    """Calculate image-level metrics from already calibrated decisions."""
+    return classification_metrics(
+        {image: float(decisions.get(image, False)) for image in truth},
+        truth,
+        0.5,
+    )
+
+
 def event_metrics(
     scores: dict[str, float],
     catalogue: dict[str, bool],
@@ -116,6 +128,18 @@ def event_metrics(
     }
 
 
+def event_metrics_from_decisions(
+    decisions: dict[str, bool],
+    catalogue: dict[str, bool],
+) -> dict[str, int | float]:
+    """Calculate event recall while preserving the any-detector rule."""
+    return event_metrics(
+        {image: float(decision) for image, decision in decisions.items()},
+        catalogue,
+        0.5,
+    )
+
+
 def read_catalogue(path: Path) -> dict[str, bool]:
     catalogue: dict[str, bool] = {}
     with path.open(newline="", encoding="utf-8-sig") as handle:
@@ -129,6 +153,20 @@ def merge_scores(
 ) -> dict[str, float]:
     return {
         image: max(score, secondary.get(image, 0.0))
+        for image, score in primary.items()
+    }
+
+
+def asymmetric_decisions(
+    primary: dict[str, float],
+    secondary: dict[str, float],
+    primary_threshold: float,
+    secondary_threshold: float,
+) -> dict[str, bool]:
+    """Fuse two models with independently calibrated confidence thresholds."""
+    return {
+        image: score >= primary_threshold
+        or secondary.get(image, 0.0) >= secondary_threshold
         for image, score in primary.items()
     }
 
@@ -220,6 +258,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--imgsz", type=int, default=640)
     parser.add_argument("--conf-floor", type=float, default=0.01)
     parser.add_argument("--operating-threshold", type=float, default=0.25)
+    parser.add_argument(
+        "--secondary-threshold",
+        type=float,
+        help="attention-model threshold; defaults to --operating-threshold",
+    )
     parser.add_argument("--thresholds", type=parse_thresholds, default=DEFAULT_THRESHOLDS)
     parser.add_argument("--chunk-size", type=int, default=1)
     parser.add_argument("--half", action="store_true")
@@ -232,6 +275,13 @@ def main() -> None:
     from ultralytics import YOLO
 
     args = build_parser().parse_args()
+    secondary_threshold = (
+        args.secondary_threshold
+        if args.secondary_threshold is not None
+        else args.operating_threshold
+    )
+    if not 0.0 <= secondary_threshold <= 1.0:
+        raise ValueError("secondary threshold must be in [0, 1]")
     images = image_paths(args.source)
     primary_model = YOLO(args.primary)
     secondary_model = YOLO(args.secondary)
@@ -269,12 +319,18 @@ def main() -> None:
 
     full_ensemble = merge_scores(primary.scores, secondary_full.scores)
     cascade = merge_scores(primary.scores, secondary_cascade.scores)
-    full_decisions = {
-        image: score >= args.operating_threshold for image, score in full_ensemble.items()
-    }
-    cascade_decisions = {
-        image: score >= args.operating_threshold for image, score in cascade.items()
-    }
+    full_decisions = asymmetric_decisions(
+        primary.scores,
+        secondary_full.scores,
+        args.operating_threshold,
+        secondary_threshold,
+    )
+    cascade_decisions = asymmetric_decisions(
+        primary.scores,
+        secondary_cascade.scores,
+        args.operating_threshold,
+        secondary_threshold,
+    )
     if full_decisions != cascade_decisions:
         raise AssertionError("cascade decisions differ from full OR ensemble")
 
@@ -295,29 +351,35 @@ def main() -> None:
         "primary": primary.scores,
         "secondary": secondary_full.scores,
         "full_ensemble": full_ensemble,
-        "cascade": cascade,
     }
     rows: list[dict[str, object]] = []
     truth = read_truth(args.labels_dir, images) if args.labels_dir else None
     catalogue = read_catalogue(args.catalogue) if args.catalogue else None
     for strategy, scores in strategies.items():
-        # The measured cascade only invokes the secondary model according to
-        # operating_threshold. Its stored scores are therefore not a valid
-        # simulation for stricter thresholds, where a different subset would
-        # have been invoked. Report the cascade at its measured point only.
-        strategy_thresholds = (
-            (args.operating_threshold,) if strategy == "cascade" else args.thresholds
-        )
-        for threshold in strategy_thresholds:
+        for threshold in args.thresholds:
             row: dict[str, object] = {
                 "strategy": strategy,
                 "threshold": threshold,
+                "secondary_threshold": threshold,
             }
             if truth is not None:
                 row.update(classification_metrics(scores, truth, threshold))
             if catalogue is not None:
                 row.update(event_metrics(scores, catalogue, threshold))
             rows.append(row)
+
+    cascade_row: dict[str, object] = {
+        "strategy": "cascade",
+        "threshold": args.operating_threshold,
+        "secondary_threshold": secondary_threshold,
+    }
+    if truth is not None:
+        cascade_row.update(
+            classification_metrics_from_decisions(cascade_decisions, truth)
+        )
+    if catalogue is not None:
+        cascade_row.update(event_metrics_from_decisions(cascade_decisions, catalogue))
+    rows.append(cascade_row)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     with (args.output_dir / "threshold_metrics.csv").open(
@@ -338,6 +400,7 @@ def main() -> None:
                 "secondary_confidence": secondary_full.scores.get(name, 0.0),
                 "secondary_invoked": name in secondary_cascade.scores,
                 "cascade_confidence": cascade.get(name, 0.0),
+                "cascade_decision": cascade_decisions.get(name, False),
             }
         )
     with (args.output_dir / "predictions.csv").open(
@@ -357,6 +420,7 @@ def main() -> None:
             "imgsz": args.imgsz,
             "conf_floor": args.conf_floor,
             "operating_threshold": args.operating_threshold,
+            "secondary_threshold": secondary_threshold,
             "chunk_size": args.chunk_size,
             "half": args.half,
             "images": len(images),

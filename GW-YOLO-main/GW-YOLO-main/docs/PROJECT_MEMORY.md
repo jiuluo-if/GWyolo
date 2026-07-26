@@ -163,3 +163,20 @@ false alarms/day 或等价误报约束。结构优化还必须做锁定训练变
   根因是当前 Ultralytics 对路径列表内存批次的处理，不是 FP16。
 - 高召回研究模式允许 `half=True`，但必须保持 `chunk_size=1`；任何更大路径
   micro-batch 都需重新验证后才能启用。
+
+## 12. 2026-07-26 Attention Residual 非对称阈值校准
+
+- 新增 `scripts/calibrate_attention_fusion.py`，只用固定验证集选择 baseline 与
+  Attention Residual 的独立阈值，GW5 不参与选参。
+- 在验证 FP 不超过 3/14 的约束下，3600 个组合中选择出 baseline=0.14、
+  Attention Residual=0.36；验证结果为 TP=68、FP=3、FN=1、TN=11。
+- 冻结策略后重跑 GW5 得到 100/104，命中 171/429 张探测器图像；Attention Residual
+  调用 273 次，级联耗时 27.21 秒，比完整双模型 34.94 秒节省 22.11%。
+- `scripts/benchmark_cascade.py` 已支持 `--secondary-threshold`，并验证非对称级联与
+  完整非对称 OR 的二值结果一致。
+- 剩余 4 个事件中，`GW240922_142106` 在 `imgs/gw5.0` 没有对应图像；另外 3 个事件
+  的双模型最高分均低于 0.04。所有满足 FP<=3 的阈值组合最多仍召回 100/104，
+  因而同一批分数上的阈值继续下降已经到达瓶颈。
+- 下一步不得继续用 GW5 反复挑阈值。必须先补齐缺失探测器图像与时间隔离纯负样本，
+  再执行冻结超参数的 baseline、仅 P4 Attention Residual、P3+P4 Attention Residual
+  三随机种子消融；生产结论仍需 false alarms/day。

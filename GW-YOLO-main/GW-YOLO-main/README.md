@@ -90,5 +90,19 @@ python scripts/benchmark_cascade.py `
 ```
 
 当前结论与研究边界见
-[完整优化报告](docs/OPTIMIZATION_REPORT.md) 和
-[项目研究报告](docs/RESEARCH_REPORT.md)。
+[完整优化报告](docs/FINAL_OPTIMIZATION_REPORT.md) 和
+[项目研究报告](docs/FINAL_RESEARCH_REPORT.md)。
+
+Attention Residual 非对称阈值校准：
+
+```powershell
+python scripts/calibrate_attention_fusion.py `
+  --validation-predictions docs/experiments/batch_03_negative_proxy/predictions.csv `
+  --gw5-predictions docs/experiments/batch_04_cascade/predictions.csv `
+  --catalogue docs/gw5_recall_details.csv `
+  --output-dir docs/experiments/batch_06_asymmetric_calibration
+```
+
+校准得到 baseline/Attention Residual 阈值 `0.14/0.36`。复现实测级联时分别传入
+`--operating-threshold 0.14 --secondary-threshold 0.36`；阈值选择只使用验证集，
+GW5 只用于冻结策略后的事件级评估。

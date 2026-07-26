@@ -1,0 +1,36 @@
+{
+  "selection_protocol": {
+    "selection_data": "docs\\experiments\\batch_03_negative_proxy\\predictions.csv",
+    "gw5_used_for_selection": false,
+    "objective": "maximize validation TP, constrain FP, use lowest stable thresholds",
+    "max_false_positives": 3,
+    "threshold_start": 0.01,
+    "threshold_stop": 0.6,
+    "threshold_step": 0.01
+  },
+  "selected_policy": {
+    "primary_threshold": 0.14,
+    "secondary_threshold": 0.36,
+    "tp": 68,
+    "fp": 3,
+    "fn": 1,
+    "tn": 11,
+    "precision": 0.9577464788732394,
+    "recall": 0.9855072463768116,
+    "false_positive_rate": 0.21428571428571427,
+    "secondary_invocations": 12
+  },
+  "gw5_evaluation": {
+    "eligible_events": 104,
+    "recalled_events": 100,
+    "event_recall": 0.9615384615384616,
+    "detector_image_hits": 171,
+    "secondary_invocations": 273,
+    "missed_events": [
+      "GW240601_231004",
+      "GW240922_142106",
+      "GW241009_022835",
+      "GW241114_235258"
+    ]
+  }
+}
