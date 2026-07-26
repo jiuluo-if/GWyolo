@@ -180,3 +180,21 @@ false alarms/day 或等价误报约束。结构优化还必须做锁定训练变
 - 下一步不得继续用 GW5 反复挑阈值。必须先补齐缺失探测器图像与时间隔离纯负样本，
   再执行冻结超参数的 baseline、仅 P4 Attention Residual、P3+P4 Attention Residual
   三随机种子消融；生产结论仍需 false alarms/day。
+
+## 13. 2026-07-26 锁定变量 Attention Residual 训练入口
+
+- 正式受控训练入口为 `scripts/train_attention_residual_ablation.py`；旧 `trian.py`
+  只保留为历史单次训练入口，不用于新的结构结论。
+- 默认矩阵为 baseline、仅 P4 Attention Residual、P3+P4 Attention Residual，
+  每种结构使用种子 0、1、2，共 9 个任务。
+- 新增 `configs/yolo26m-chirp-baseline-seg.yaml` 与
+  `configs/yolo26m-chirp-p4-attn-seg.yaml`；P3+P4 继续使用经过实测的
+  `configs/yolo26m-chirp-attn-seg.yaml`。
+- 数据划分、预训练权重、输入尺寸、epoch、batch、优化器、学习率、损失权重和物理一致
+  增强均锁定；结构是三个实验组之间唯一允许改变的变量。
+- 候选结构的最终 `Segment26` 层编号会后移；训练入口除常规整模型加载外，还按分割头
+  局部键名和张量形状迁移兼容预训练权重，避免候选组整头随机初始化这一混杂变量。
+- `--dry-run` 只打印计划，不导入 Ultralytics 或启动 GPU；正式运行会写入
+  `runs/segment/attention_residual_ablation/` 并保存 `experiment_manifest.json`。
+- 脚本拒绝复用已有任务目录。训练后必须使用固定验证、GW5 事件规则和验证集独立阈值
+  校准，并报告三个种子的均值与标准差，不能用单次最好权重下结构结论。
