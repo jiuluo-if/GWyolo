@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "primary": "runs\\segment\\train\\weights\\best.pt",
+    "secondary": "runs\\segment\\segment_new\\chirp_c2psa-2\\weights\\best.pt",
+    "source": "imgs\\gw5.0",
+    "labels_dir": null,
+    "catalogue": "docs\\gw5_recall_details.csv",
+    "imgsz": 640,
+    "conf_floor": 0.01,
+    "operating_threshold": 0.25,
+    "chunk_size": 1,
+    "half": true,
+    "images": 429
+  },
+  "timings": {
+    "primary_wall_seconds": 12.66101719999915,
+    "secondary_full_wall_seconds": 14.565051399999902,
+    "full_ensemble_wall_seconds": 27.226068599999053,
+    "secondary_cascade_wall_seconds": 9.736135899999681,
+    "cascade_wall_seconds": 22.39715309999883,
+    "secondary_invocations": 295,
+    "secondary_invocation_rate": 0.6876456876456877,
+    "cascade_time_saved_fraction": 0.17736367196255387
+  },
+  "threshold_metrics": [
+    {
+      "strategy": "primary",
+      "threshold": 0.25,
+      "eligible_events": 104,
+      "recalled_events": 85,
+      "event_recall": 0.8173076923076923,
+      "detector_images": 429,
+      "detector_image_hits": 134,
+      "detector_image_hit_rate": 0.3123543123543124
+    },
+    {
+      "strategy": "secondary",
+      "threshold": 0.25,
+      "eligible_events": 104,
+      "recalled_events": 88,
+      "event_recall": 0.8461538461538461,
+      "detector_images": 429,
+      "detector_image_hits": 127,
+      "detector_image_hit_rate": 0.29603729603729606
+    },
+    {
+      "strategy": "full_ensemble",
+      "threshold": 0.25,
+      "eligible_events": 104,
+      "recalled_events": 99,
+      "event_recall": 0.9519230769230769,
+      "detector_images": 429,
+      "detector_image_hits": 168,
+      "detector_image_hit_rate": 0.3916083916083916
+    },
+    {
+      "strategy": "cascade",
+      "threshold": 0.25,
+      "eligible_events": 104,
+      "recalled_events": 99,
+      "event_recall": 0.9519230769230769,
+      "detector_images": 429,
+      "detector_image_hits": 168,
+      "detector_image_hit_rate": 0.3916083916083916
+    }
+  ]
+}

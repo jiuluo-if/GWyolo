@@ -3,7 +3,7 @@ import cv2
 from ultralytics import YOLO
 
 # ========== 用户配置（请在此修改） ==========
-WEIGHTS_PATH = r"F:\python\yolo\GW-YOLO-main\GW-YOLO-main\runs\segment\train\weights\best.pt"
+WEIGHTS_PATH = r"F:\python\yolo\GW-YOLO-main\GW-YOLO-main\runs\segment\segment_new\chirp_c2psa-2\weights\best.pt"
 SOURCE_PATH = r"F:\python\yolo\GW-YOLO-main\GW-YOLO-main\imgs\gw5.0"
 OUTPUT_DIR = "runs/filtered/predict_5.0"       # 根输出目录，其下自动创建 labels/ 和 images/
 CONF_THRESHOLD = 0.25
