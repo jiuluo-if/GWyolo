@@ -7,7 +7,7 @@
 1. 创建 Python 环境并安装依赖：
 
    ```powershell
-   python -m pip install ultralytics opencv-python numpy
+   python -m pip install -r requirements.txt
    ```
 
 2. 按 `gw_data.yaml` 准备数据集。训练图像与标签分别位于 `train/images`、`train/labels`；验证集由 `val` 指向。
@@ -43,3 +43,52 @@ docs/             # 项目说明与实验记录
 ```
 
 当前代码仍保留原始路径，避免破坏正在使用的训练与推理流程。
+
+## 可复现实验
+
+固定验证集对比：
+
+```powershell
+python scripts/benchmark_validation.py `
+  --model baseline=runs/segment/train/weights/best.pt `
+  --model c2psa=runs/segment/segment_new/chirp_c2psa-2/weights/best.pt `
+  --output-dir docs/experiments/batch_00_validation
+```
+
+GW5 多尺度与模型后融合：
+
+```powershell
+python scripts/benchmark_gw5.py `
+  --model baseline=runs/segment/train/weights/best.pt `
+  --model c2psa=runs/segment/segment_new/chirp_c2psa-2/weights/best.pt `
+  --imgsz 512 --imgsz 640 --imgsz 768 `
+  --output-dir docs/experiments/batch_01_inference
+```
+
+成本约束工作点选择：
+
+```powershell
+python scripts/select_operating_points.py `
+  --summary docs/experiments/batch_01_inference/threshold_summary.csv `
+  --profile efficient:0.30:25 `
+  --profile balanced:0.40:50 `
+  --profile max_recall:0.45:120 `
+  --output-dir docs/experiments/batch_02_calibration
+```
+
+验证阴性代理与按需级联：
+
+```powershell
+python scripts/benchmark_cascade.py `
+  --primary runs/segment/train/weights/best.pt `
+  --secondary runs/segment/segment_new/chirp_c2psa-2/weights/best.pt `
+  --source imgs/gw5.0 `
+  --catalogue docs/gw5_recall_details.csv `
+  --operating-threshold 0.25 `
+  --chunk-size 1 --half `
+  --output-dir runs/optimization_cascade_fp16
+```
+
+当前结论与研究边界见
+[完整优化报告](docs/OPTIMIZATION_REPORT.md) 和
+[项目研究报告](docs/RESEARCH_REPORT.md)。

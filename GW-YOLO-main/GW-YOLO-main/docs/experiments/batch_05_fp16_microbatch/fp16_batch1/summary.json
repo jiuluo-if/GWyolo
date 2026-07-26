@@ -1,0 +1,79 @@
+{
+  "metadata": {
+    "primary": "runs\\segment\\train\\weights\\best.pt",
+    "secondary": "runs\\segment\\segment_new\\chirp_c2psa-2\\weights\\best.pt",
+    "source": "val\\val_3.0\\images",
+    "labels_dir": "val\\val_3.0\\labels",
+    "catalogue": null,
+    "imgsz": 640,
+    "conf_floor": 0.01,
+    "operating_threshold": 0.25,
+    "chunk_size": 1,
+    "half": true,
+    "images": 83
+  },
+  "timings": {
+    "primary_wall_seconds": 4.013361399999667,
+    "secondary_full_wall_seconds": 2.928044199999931,
+    "full_ensemble_wall_seconds": 6.941405599999598,
+    "secondary_cascade_wall_seconds": 0.37700759999916045,
+    "cascade_wall_seconds": 4.390368999998827,
+    "secondary_invocations": 13,
+    "secondary_invocation_rate": 0.1566265060240964,
+    "cascade_time_saved_fraction": 0.36751009046365457
+  },
+  "threshold_metrics": [
+    {
+      "strategy": "primary",
+      "threshold": 0.25,
+      "tp": 67,
+      "fp": 3,
+      "fn": 2,
+      "tn": 11,
+      "precision": 0.9571428571428572,
+      "recall": 0.9710144927536232,
+      "specificity": 0.7857142857142857,
+      "false_positive_rate": 0.2142857142857143,
+      "accuracy": 0.9397590361445783
+    },
+    {
+      "strategy": "secondary",
+      "threshold": 0.25,
+      "tp": 60,
+      "fp": 3,
+      "fn": 9,
+      "tn": 11,
+      "precision": 0.9523809523809523,
+      "recall": 0.8695652173913043,
+      "specificity": 0.7857142857142857,
+      "false_positive_rate": 0.2142857142857143,
+      "accuracy": 0.8554216867469879
+    },
+    {
+      "strategy": "full_ensemble",
+      "threshold": 0.25,
+      "tp": 68,
+      "fp": 5,
+      "fn": 1,
+      "tn": 9,
+      "precision": 0.9315068493150684,
+      "recall": 0.9855072463768116,
+      "specificity": 0.6428571428571429,
+      "false_positive_rate": 0.3571428571428571,
+      "accuracy": 0.927710843373494
+    },
+    {
+      "strategy": "cascade",
+      "threshold": 0.25,
+      "tp": 68,
+      "fp": 5,
+      "fn": 1,
+      "tn": 9,
+      "precision": 0.9315068493150684,
+      "recall": 0.9855072463768116,
+      "specificity": 0.6428571428571429,
+      "false_positive_rate": 0.3571428571428571,
+      "accuracy": 0.927710843373494
+    }
+  ]
+}

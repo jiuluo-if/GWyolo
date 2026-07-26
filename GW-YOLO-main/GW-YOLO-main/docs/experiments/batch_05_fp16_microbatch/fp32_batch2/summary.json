@@ -1,0 +1,79 @@
+{
+  "metadata": {
+    "primary": "runs\\segment\\train\\weights\\best.pt",
+    "secondary": "runs\\segment\\segment_new\\chirp_c2psa-2\\weights\\best.pt",
+    "source": "val\\val_3.0\\images",
+    "labels_dir": "val\\val_3.0\\labels",
+    "catalogue": null,
+    "imgsz": 640,
+    "conf_floor": 0.01,
+    "operating_threshold": 0.25,
+    "chunk_size": 2,
+    "half": false,
+    "images": 83
+  },
+  "timings": {
+    "primary_wall_seconds": 3.30860230000053,
+    "secondary_full_wall_seconds": 4.148279000000002,
+    "full_ensemble_wall_seconds": 7.456881300000532,
+    "secondary_cascade_wall_seconds": 3.8516240999997535,
+    "cascade_wall_seconds": 7.160226400000283,
+    "secondary_invocations": 82,
+    "secondary_invocation_rate": 0.9879518072289156,
+    "cascade_time_saved_fraction": 0.03978270379605309
+  },
+  "threshold_metrics": [
+    {
+      "strategy": "primary",
+      "threshold": 0.25,
+      "tp": 1,
+      "fp": 0,
+      "fn": 68,
+      "tn": 14,
+      "precision": 1.0,
+      "recall": 0.014492753623188406,
+      "specificity": 1.0,
+      "false_positive_rate": 0.0,
+      "accuracy": 0.18072289156626506
+    },
+    {
+      "strategy": "secondary",
+      "threshold": 0.25,
+      "tp": 1,
+      "fp": 0,
+      "fn": 68,
+      "tn": 14,
+      "precision": 1.0,
+      "recall": 0.014492753623188406,
+      "specificity": 1.0,
+      "false_positive_rate": 0.0,
+      "accuracy": 0.18072289156626506
+    },
+    {
+      "strategy": "full_ensemble",
+      "threshold": 0.25,
+      "tp": 1,
+      "fp": 0,
+      "fn": 68,
+      "tn": 14,
+      "precision": 1.0,
+      "recall": 0.014492753623188406,
+      "specificity": 1.0,
+      "false_positive_rate": 0.0,
+      "accuracy": 0.18072289156626506
+    },
+    {
+      "strategy": "cascade",
+      "threshold": 0.25,
+      "tp": 1,
+      "fp": 0,
+      "fn": 68,
+      "tn": 14,
+      "precision": 1.0,
+      "recall": 0.014492753623188406,
+      "specificity": 1.0,
+      "false_positive_rate": 0.0,
+      "accuracy": 0.18072289156626506
+    }
+  ]
+}
