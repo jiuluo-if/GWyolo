@@ -90,5 +90,37 @@ python scripts/benchmark_cascade.py `
 ```
 
 当前结论与研究边界见
-[完整优化报告](docs/OPTIMIZATION_REPORT.md) 和
-[项目研究报告](docs/RESEARCH_REPORT.md)。
+[完整优化报告](docs/FINAL_OPTIMIZATION_REPORT.md) 和
+[项目研究报告](docs/FINAL_RESEARCH_REPORT.md)。
+
+Attention Residual 非对称阈值校准：
+
+```powershell
+python scripts/calibrate_attention_fusion.py `
+  --validation-predictions docs/experiments/batch_03_negative_proxy/predictions.csv `
+  --gw5-predictions docs/experiments/batch_04_cascade/predictions.csv `
+  --catalogue docs/gw5_recall_details.csv `
+  --output-dir docs/experiments/batch_06_asymmetric_calibration
+```
+
+校准得到 baseline/Attention Residual 阈值 `0.14/0.36`。复现实测级联时分别传入
+`--operating-threshold 0.14 --secondary-threshold 0.36`；阈值选择只使用验证集，
+GW5 只用于冻结策略后的事件级评估。
+
+## Attention Residual 多种子训练
+
+先审计锁定变量的 3×3 实验矩阵：
+
+```powershell
+python scripts/train_attention_residual_ablation.py --dry-run
+```
+
+正式训练：
+
+```powershell
+conda run -n yolo python scripts/train_attention_residual_ablation.py
+```
+
+脚本统一比较 baseline、仅 P4 Attention Residual、P3+P4 Attention Residual，
+默认种子为 `0,1,2`，并拒绝复用已有输出目录。完整说明见
+[Attention Residual 锁定变量训练指南](docs/TRAINING_ABLATION_GUIDE.md)。

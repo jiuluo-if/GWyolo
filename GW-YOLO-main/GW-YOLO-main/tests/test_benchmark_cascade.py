@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from scripts.benchmark_cascade import (
+    asymmetric_decisions,
     chunks,
     classification_metrics,
     event_metrics,
@@ -19,6 +20,15 @@ class CascadeBenchmarkTests(unittest.TestCase):
         primary = {"a": 0.8, "b": 0.1}
         secondary = {"a": 0.2, "b": 0.7}
         self.assertEqual(merge_scores(primary, secondary), {"a": 0.8, "b": 0.7})
+
+    def test_asymmetric_decisions_use_independent_thresholds(self) -> None:
+        primary = {"primary_hit": 0.2, "attention_hit": 0.1, "miss": 0.1}
+        secondary = {"primary_hit": 0.1, "attention_hit": 0.4, "miss": 0.3}
+        decisions = asymmetric_decisions(primary, secondary, 0.14, 0.36)
+        self.assertEqual(
+            decisions,
+            {"primary_hit": True, "attention_hit": True, "miss": False},
+        )
 
     def test_classification_metrics(self) -> None:
         scores = {"tp": 0.8, "fn": 0.1, "fp": 0.7, "tn": 0.0}
