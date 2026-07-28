@@ -57,6 +57,10 @@ python scripts/train_attention_residual_ablation.py --dry-run
 conda run -n yolo python scripts/train_attention_residual_ablation.py
 ```
 
+训练入口会先把 `--project` 规范化为绝对路径，避免当前 Ultralytics 对相对 project
+再次附加默认 `runs/segment`。因此实验清单、目录冲突检查和真实 `save_dir` 必须位于
+同一项目根目录；如三者不一致，应停止任务并检查运行环境。
+
 默认输出：
 
 ```text

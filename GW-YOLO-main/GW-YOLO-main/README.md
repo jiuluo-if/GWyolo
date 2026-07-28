@@ -2,6 +2,10 @@
 
 基于 Ultralytics YOLO 的时频图目标分割项目，用于识别两类目标：`chirp` 和 `noise`。
 
+当前高召回研究策略为 baseline@640、Attention Residual@640 与 baseline 512/768
+跨尺度一致性的短路级联。固定验证为 69/3/0/11，补图后的 GW5 为 102/104；这不是
+生产结论，生产评估仍缺少时间隔离负集和 `false alarms/day`。
+
 ## 快速开始
 
 1. 创建 Python 环境并安装依赖：
@@ -30,6 +34,7 @@
 - `runs/`、模型权重、缓存和本地数据均为运行产物，不应作为常规源码提交。
 - 当前 `trian.py` 是既有训练入口，文件名为历史拼写；后续重构时应迁移为 `scripts/train.py`，并保留兼容入口。
 - 详细的项目上下文、风险点和建议结构见 [docs/PROJECT_MEMORY.md](docs/PROJECT_MEMORY.md)。
+- 批次 00–11 的接受/拒绝决策见 [实验批次索引](docs/experiments/README.md)。
 
 ## 建议目标布局
 
@@ -107,6 +112,31 @@ python scripts/calibrate_attention_fusion.py `
 `--operating-threshold 0.14 --secondary-threshold 0.36`；阈值选择只使用验证集，
 GW5 只用于冻结策略后的事件级评估。
 
+跨尺度一致性校准：
+
+```powershell
+python scripts/calibrate_scale_consensus.py `
+  --validation-640 docs/experiments/batch_06_asymmetric_calibration/validation_runtime/predictions.csv `
+  --validation-512 docs/experiments/batch_08_multiscale_rescue/validation_512/predictions.csv `
+  --validation-768 docs/experiments/batch_08_multiscale_rescue/validation_768/predictions.csv `
+  --gw5-predictions docs/experiments/batch_08_multiscale_rescue/gw5_scores/predictions.csv `
+  --output-dir docs/experiments/batch_09_scale_consensus
+```
+
+当前短路策略实测：
+
+```powershell
+conda run -n yolo python scripts/benchmark_scale_consensus_cascade.py `
+  --baseline runs/segment/train/weights/best.pt `
+  --attention runs/segment/segment_new/chirp_c2psa-2/weights/best.pt `
+  --source imgs/gw5.0 `
+  --catalogue docs/gw5_recall_details.csv `
+  --output-dir docs/experiments/batch_10_short_circuit_runtime/gw5
+```
+
+脚本默认阈值为 baseline 0.14、Attention 0.36、baseline@512 0.15、
+baseline@768 0.07。仅在前三级失败且 512 达到 0.15 时才运行 768。
+
 ## Attention Residual 多种子训练
 
 先审计锁定变量的 3×3 实验矩阵：
@@ -122,5 +152,6 @@ conda run -n yolo python scripts/train_attention_residual_ablation.py
 ```
 
 脚本统一比较 baseline、仅 P4 Attention Residual、P3+P4 Attention Residual，
-默认种子为 `0,1,2`，并拒绝复用已有输出目录。完整说明见
+默认种子为 `0,1,2`，会把 `project` 规范化为绝对路径，并拒绝复用已有输出目录。
+1-epoch 三结构烟雾测试已通过，但不能替代正式 300-epoch 多种子实验。完整说明见
 [Attention Residual 锁定变量训练指南](docs/TRAINING_ABLATION_GUIDE.md)。

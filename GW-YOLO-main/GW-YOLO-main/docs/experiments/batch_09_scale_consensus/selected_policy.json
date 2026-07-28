@@ -1,0 +1,68 @@
+{
+  "selection_scope": "fixed validation only; GW5 excluded from threshold selection",
+  "search": {
+    "grid_start": 0.01,
+    "grid_stop": 0.6,
+    "grid_step": 0.01,
+    "combinations": 3600,
+    "max_false_positives": 3,
+    "locked_baseline_threshold": 0.14,
+    "locked_attention_threshold": 0.36,
+    "tie_break": "max TP, min FP, highest combined consensus thresholds"
+  },
+  "selected_policy": {
+    "order": [
+      "baseline@640",
+      "attention@640",
+      "baseline@512 AND baseline@768"
+    ],
+    "accepted": true,
+    "decision": "accept: validation reached 69/69 positives within FP constraint",
+    "baseline_threshold": 0.14,
+    "attention_threshold": 0.36,
+    "threshold_512": 0.15,
+    "threshold_768": 0.07,
+    "tp": 69,
+    "fp": 3,
+    "fn": 0,
+    "tn": 11,
+    "precision": 0.9583333333333334,
+    "recall": 1.0,
+    "false_positive_rate": 0.21428571428571427,
+    "attention_invocations": 12,
+    "consensus_invocations": 12,
+    "primary_hits": 71,
+    "attention_rescues": 0,
+    "consensus_rescues": 1
+  },
+  "gw5_blind_audit": {
+    "eligible_events": 104,
+    "recalled_events": 102,
+    "event_recall": 0.9807692307692307,
+    "missed_events": [
+      "GW240601_231004",
+      "GW241114_235258"
+    ],
+    "detector_images": 432,
+    "detector_image_hits": 177,
+    "detector_image_hit_rate": 0.4097222222222222,
+    "attention_invocations": 274,
+    "consensus_invocations": 259,
+    "primary_hits": 158,
+    "attention_rescues": 15,
+    "consensus_rescues": 4,
+    "estimated_cascade_inference_ms": 34167.9011999895,
+    "estimated_full_inference_ms": 49107.91019998669,
+    "estimated_inference_saved_fraction": 0.30422815670949155
+  },
+  "inputs": {
+    "validation_rows": 83,
+    "gw5_rows": 432,
+    "eligible_events": 104,
+    "validation_640": "docs\\experiments\\batch_06_asymmetric_calibration\\validation_runtime\\predictions.csv",
+    "validation_512": "docs\\experiments\\batch_08_multiscale_rescue\\validation_512\\predictions.csv",
+    "validation_768": "docs\\experiments\\batch_08_multiscale_rescue\\validation_768\\predictions.csv",
+    "gw5_predictions": "docs\\experiments\\batch_08_multiscale_rescue\\gw5_scores\\predictions.csv",
+    "catalogue": "docs\\gw5_recall_details.csv"
+  }
+}
