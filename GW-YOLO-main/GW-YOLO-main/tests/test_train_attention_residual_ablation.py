@@ -10,6 +10,7 @@ from scripts.train_attention_residual_ablation import (
     DEFAULT_VARIANTS,
     build_jobs,
     locked_train_args,
+    normalize_project_path,
     seed_list,
     transfer_matching_module_state,
     validate_inputs,
@@ -43,6 +44,11 @@ class AttentionResidualTrainingTests(unittest.TestCase):
         self.assertEqual(values["flipud"], 0.0)
         self.assertEqual(values["fliplr"], 0.0)
         self.assertTrue(values["deterministic"])
+
+    def test_project_path_is_absolute_before_ultralytics_receives_it(self) -> None:
+        normalized = normalize_project_path(Path("runs/test"))
+        self.assertTrue(normalized.is_absolute())
+        self.assertTrue(str(normalized).endswith(str(Path("runs/test"))))
 
     def test_variant_and_seed_parsers_reject_invalid_values(self) -> None:
         with self.assertRaises(argparse.ArgumentTypeError):

@@ -89,6 +89,11 @@ def build_jobs(
     ]
 
 
+def normalize_project_path(project: Path) -> Path:
+    """Use an absolute project path so Ultralytics does not prefix runs_dir."""
+    return project.expanduser().resolve()
+
+
 def locked_train_args(
     *,
     data: Path,
@@ -280,6 +285,7 @@ def main() -> None:
     if args.workers < 0:
         raise ValueError("workers must be non-negative")
 
+    args.project = normalize_project_path(args.project)
     jobs = build_jobs(args.variants, args.seeds, args.project)
     validate_inputs(
         jobs,

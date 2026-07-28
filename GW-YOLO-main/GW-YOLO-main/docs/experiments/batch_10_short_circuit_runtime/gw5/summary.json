@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "baseline": "runs\\segment\\train\\weights\\best.pt",
+    "attention": "runs\\segment\\segment_new\\chirp_c2psa-2\\weights\\best.pt",
+    "source": "imgs\\gw5.0",
+    "images": 432,
+    "conf_floor": 0.01,
+    "half": false,
+    "device": "0",
+    "policy": {
+      "baseline_threshold": 0.14,
+      "attention_threshold": 0.36,
+      "threshold_512": 0.15,
+      "threshold_768": 0.07
+    }
+  },
+  "timings": {
+    "baseline_640_wall_seconds": 14.041861400000016,
+    "attention_640_wall_seconds": 13.28264709999985,
+    "baseline_512_wall_seconds": 5.861607300000287,
+    "baseline_768_wall_seconds": 0.3637042999998812,
+    "total_wall_seconds": 33.549820100000034,
+    "summed_model_inference_ms": 25781.912799990096,
+    "attention_invocations": 274,
+    "baseline_512_invocations": 259,
+    "baseline_768_invocations": 8,
+    "baseline_768_short_circuit_fraction": 0.9691119691119691
+  },
+  "stage_counts": {
+    "baseline_640": 158,
+    "attention_640": 15,
+    "scale_consensus": 4,
+    "miss": 255
+  },
+  "metrics": {
+    "gw5": {
+      "eligible_events": 104,
+      "recalled_events": 102,
+      "event_recall": 0.9807692307692307,
+      "missed_events": [
+        "GW240601_231004",
+        "GW241114_235258"
+      ],
+      "detector_images": 432,
+      "detector_image_hits": 177,
+      "detector_image_hit_rate": 0.4097222222222222
+    }
+  }
+}

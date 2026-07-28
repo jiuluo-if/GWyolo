@@ -1,0 +1,4 @@
+variant,seed,epochs,head_transfer,train_seconds,gpu_peak_gib,mask_map50_95,inference_ms_per_image,role
+baseline,0,1,362/376,55.5112,2.52,0.10836,15.5,smoke_only
+p4,0,1,362/376,53.2786,2.50,0.07416,16.3,smoke_only
+p3p4,0,1,362/376,73.8015,5.44,0.08312,25.0,smoke_only

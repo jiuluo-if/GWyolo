@@ -1,0 +1,108 @@
+{
+  "selection_scope": "fixed validation only; GW5 excluded from threshold selection",
+  "search": {
+    "grid_start": 0.01,
+    "grid_stop": 0.6,
+    "grid_step": 0.01,
+    "locked_baseline_threshold": 0.14,
+    "locked_attention_threshold": 0.36,
+    "combinations": 60,
+    "max_false_positives": 3,
+    "max_tp_candidate_count": 5,
+    "saved_candidate_limit": 5
+  },
+  "selected_policy": {
+    "order": [
+      "baseline@640",
+      "attention@640",
+      "baseline@512+baseline@768"
+    ],
+    "accepted": false,
+    "decision": "reject: no validation TP improvement under the FP constraint",
+    "baseline_threshold": 0.14,
+    "attention_threshold": 0.36,
+    "multiscale_threshold": 0.6,
+    "tp": 68,
+    "fp": 3,
+    "fn": 1,
+    "tn": 11,
+    "precision": 0.9577464788732394,
+    "recall": 0.9855072463768116,
+    "false_positive_rate": 0.21428571428571427,
+    "attention_invocations": 12,
+    "multiscale_invocations": 12,
+    "primary_hits": 71,
+    "attention_rescues": 0,
+    "multiscale_rescues": 0
+  },
+  "previous_policy": {
+    "baseline_threshold": 0.14,
+    "attention_threshold": 0.36,
+    "multiscale_threshold": null,
+    "validation": {
+      "tp": 68,
+      "fp": 3,
+      "fn": 1,
+      "tn": 11,
+      "precision": 0.9577464788732394,
+      "recall": 0.9855072463768116,
+      "false_positive_rate": 0.21428571428571427,
+      "attention_invocations": 12,
+      "multiscale_invocations": 0,
+      "primary_hits": 71,
+      "attention_rescues": 0,
+      "multiscale_rescues": 0
+    },
+    "gw5": {
+      "eligible_events": 104,
+      "recalled_events": 101,
+      "event_recall": 0.9711538461538461,
+      "missed_events": [
+        "GW240601_231004",
+        "GW241009_022835",
+        "GW241114_235258"
+      ],
+      "detector_images": 432,
+      "detector_image_hits": 173,
+      "detector_image_hit_rate": 0.40046296296296297,
+      "attention_invocations": 274,
+      "multiscale_invocations": 0,
+      "primary_hits": 158,
+      "attention_rescues": 15,
+      "multiscale_rescues": 0,
+      "estimated_cascade_inference_ms": 21579.211500002202,
+      "estimated_full_inference_ms": 49107.91019998669,
+      "estimated_inference_saved_fraction": 0.5605756503967858
+    }
+  },
+  "gw5_blind_audit": {
+    "eligible_events": 104,
+    "recalled_events": 102,
+    "event_recall": 0.9807692307692307,
+    "missed_events": [
+      "GW240601_231004",
+      "GW241114_235258"
+    ],
+    "detector_images": 432,
+    "detector_image_hits": 175,
+    "detector_image_hit_rate": 0.4050925925925926,
+    "attention_invocations": 274,
+    "multiscale_invocations": 259,
+    "primary_hits": 158,
+    "attention_rescues": 15,
+    "multiscale_rescues": 2,
+    "estimated_cascade_inference_ms": 34167.9011999895,
+    "estimated_full_inference_ms": 49107.91019998669,
+    "estimated_inference_saved_fraction": 0.30422815670949155
+  },
+  "inputs": {
+    "validation_rows": 83,
+    "gw5_rows": 432,
+    "eligible_events": 104,
+    "validation_640": "docs\\experiments\\batch_06_asymmetric_calibration\\validation_runtime\\predictions.csv",
+    "validation_512": "docs\\experiments\\batch_08_multiscale_rescue\\validation_512\\predictions.csv",
+    "validation_768": "docs\\experiments\\batch_08_multiscale_rescue\\validation_768\\predictions.csv",
+    "gw5_predictions": "docs\\experiments\\batch_08_multiscale_rescue\\gw5_scores\\predictions.csv",
+    "catalogue": "docs\\gw5_recall_details.csv"
+  }
+}
