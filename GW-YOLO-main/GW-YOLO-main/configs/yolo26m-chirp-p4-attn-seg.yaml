@@ -1,5 +1,5 @@
-# YOLO26m segmentation with an extra residual position-sensitive attention
-# refinement on P4 only. P3 is untouched to control high-resolution cost.
+# 仅在 P4 增加残差位置敏感注意力细化的 YOLO26m 分割模型。
+# 不改动 P3，以控制高分辨率特征的计算成本。
 nc: 2
 end2end: True
 reg_max: 1

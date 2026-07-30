@@ -1,15 +1,14 @@
-"""Benchmark the accepted short-circuit scale-consensus cascade.
+"""评测已接受的短路跨尺度一致性级联。
 
-Execution order:
+执行顺序：
 
-1. baseline@640 on every image;
-2. Attention Residual@640 only after a primary miss;
-3. baseline@512 only after both earlier stages miss;
-4. baseline@768 only when baseline@512 passes its consensus threshold.
+1. 每张图像均执行 baseline@640；
+2. 主模型漏检后才执行 Attention Residual@640；
+3. 前两级均漏检后才执行 baseline@512；
+4. 仅当 baseline@512 通过其一致性阈值时执行 baseline@768。
 
-The last step is a logical short circuit: it preserves the calibrated
-``baseline@512 AND baseline@768`` decision while avoiding unnecessary 768
-inference.
+最后一级是逻辑短路：它保留已校准的 ``baseline@512 AND baseline@768`` 决策，
+同时避免不必要的 768 推理。
 """
 
 from __future__ import annotations

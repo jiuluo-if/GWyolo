@@ -1,8 +1,7 @@
-"""Benchmark GW5 event recall across models, image sizes, and late fusions.
+"""评测不同模型、图像尺寸和后融合策略的 GW5 事件召回率。
 
-The benchmark intentionally reports detector-image hit rate as a review-workload
-proxy. GW5 is a positive-event catalogue, so it cannot measure a true
-false-positive rate without a separate negative dataset.
+本评测有意将探测器图像命中率仅报告为人工复核工作量代理。GW5 是正事件目录，
+没有独立负集时无法衡量真实误报率。
 """
 
 from __future__ import annotations
@@ -45,7 +44,7 @@ class Prediction:
 
 
 def parse_model_spec(value: str) -> ModelSpec:
-    """Parse NAME=WEIGHTS_PATH without restricting '=' in the path."""
+    """解析“名称=权重路径”，且不限制路径中出现等号。"""
     if "=" not in value:
         raise argparse.ArgumentTypeError("model must use NAME=WEIGHTS_PATH")
     name, weights = value.split("=", 1)
@@ -62,7 +61,7 @@ def parse_thresholds(value: str) -> tuple[float, ...]:
 
 
 def read_catalogue(path: Path) -> dict[str, dict[str, str | bool]]:
-    """Read the stable event/eligibility fields from an earlier PDF audit CSV."""
+    """从既有 PDF 审计 CSV 读取稳定的事件与纳入统计字段。"""
     events: dict[str, dict[str, str | bool]] = {}
     with path.open(newline="", encoding="utf-8-sig") as handle:
         for row in csv.DictReader(handle):
@@ -85,7 +84,7 @@ def run_inference(
     conf_floor: float,
     device: str,
 ) -> tuple[list[Prediction], float]:
-    """Run one low-threshold pass so all requested thresholds share predictions."""
+    """执行一次低阈值推理，使所有候选阈值共享同一批预测。"""
     from ultralytics import YOLO
 
     if not spec.weights.is_file():
@@ -135,7 +134,7 @@ def fuse_predictions(
     experiment: str,
     members: Sequence[tuple[Sequence[Prediction], float]],
 ) -> tuple[list[Prediction], float]:
-    """Late-fuse member decisions by retaining their maximum chirp confidence."""
+    """保留成员模型的最大 chirp 置信度，以进行后融合决策。"""
     by_image: dict[str, list[Prediction]] = defaultdict(list)
     for predictions, _ in members:
         for prediction in predictions:

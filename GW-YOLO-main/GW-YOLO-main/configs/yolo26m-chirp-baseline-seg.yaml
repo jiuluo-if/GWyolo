@@ -1,5 +1,5 @@
-# Controlled YOLO26m segmentation baseline for Attention Residual ablations.
-# It keeps the standard P3/P4 neck outputs and does not add refinement blocks.
+# 用于 Attention Residual 消融的受控 YOLO26m 分割基线。
+# 它保持标准 P3/P4 neck 输出，不增加细化模块。
 nc: 2
 end2end: True
 reg_max: 1

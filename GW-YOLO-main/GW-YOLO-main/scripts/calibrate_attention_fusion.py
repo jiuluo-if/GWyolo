@@ -1,7 +1,6 @@
-"""Calibrate an asymmetric baseline-to-attention cascade from saved scores.
+"""根据已保存分数校准非对称 baseline→Attention 级联。
 
-The validation set is the only source used to select thresholds. GW5 scores are
-evaluated after selection and never participate in policy ranking.
+阈值只由验证集分数选择；GW5 分数在策略冻结后才评估，绝不参与策略排序。
 """
 
 from __future__ import annotations
@@ -135,9 +134,8 @@ def choose_policy(
     feasible = [row for row in rows if row["fp"] <= max_false_positives]
     if not feasible:
         raise ValueError("no threshold pair satisfies the false-positive constraint")
-    # Recall-first Neyman-Pearson policy: maximize validation TP, minimize FP,
-    # then use the lowest thresholds that remain feasible. The final tie-break
-    # favors fewer attention invocations without consulting GW5.
+    # 召回优先的 Neyman-Pearson 策略：先最大化验证集 TP、最小化 FP，再使用
+    # 仍满足约束的最低阈值。最终并列规则偏好更少的注意力调用，且不参考 GW5。
     return min(
         feasible,
         key=lambda row: (

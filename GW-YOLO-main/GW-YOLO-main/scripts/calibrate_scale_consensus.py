@@ -1,9 +1,8 @@
-"""Calibrate a cross-scale consensus rescue after the frozen attention cascade.
+"""在冻结 Attention 级联后校准跨尺度一致性救援。
 
-The accepted baseline@640=0.14 and Attention Residual@640=0.36 thresholds stay
-fixed. A new rescue fires only when both baseline@512 and baseline@768 exceed
-their validation-selected thresholds. Requiring agreement across scales is
-intended to distinguish a repeatable weak chirp from a single-scale artefact.
+已接受的 baseline@640=0.14 和 Attention Residual@640=0.36 阈值保持冻结。
+新增救援仅在 baseline@512 与 baseline@768 都超过各自的验证集选择阈值时触发。
+跨尺度一致性旨在区分可重复的微弱 chirp 与单尺度伪影。
 """
 
 from __future__ import annotations

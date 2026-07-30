@@ -1,4 +1,4 @@
-"""Validate multiple segmentation checkpoints with one fixed dataset split."""
+"""使用同一个固定数据划分验证多个分割检查点。"""
 
 from __future__ import annotations
 

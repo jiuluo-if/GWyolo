@@ -1,6 +1,6 @@
-# YOLO26-seg with residual attention refinement in the P3 and P4 neck paths.
-# C2PSA contains PSABlocks with residual self-attention/FFN connections; the
-# extra blocks refine the small- and medium-scale features before detection.
+# 在 P3、P4 neck 路径加入残差注意力细化的 YOLO26 分割模型。
+# C2PSA 包含带残差自注意力/FFN 连接的 PSABlock；额外模块在检测前细化
+# 小尺度与中尺度特征。
 nc: 2
 end2end: True
 reg_max: 1
@@ -37,8 +37,8 @@ head:
   - [-1, 1, Conv, [512, 3, 2]]
   - [[-1, 10], 1, Concat, [1]]
   - [-1, 1, C3k2, [1024, True, 0.5, True]]
-  # Appended branches keep the original backbone/neck layer order intact,
-  # maximizing pretrained-weight reuse while refining P3 and P4 features.
+# 追加分支保持原 backbone/neck 层顺序不变，在细化 P3、P4 特征的同时
+# 最大化复用预训练权重。
   - [16, 1, C2PSA, [256]] # residual attention at P3
   - [19, 1, C2PSA, [512]] # residual attention at P4
   - [[23, 24, 22], 1, Segment26, [nc, 32, 256]]
