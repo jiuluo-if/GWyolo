@@ -1,13 +1,12 @@
-"""Calibrate a validation-only Attention Residual + multiscale rescue cascade.
+"""校准仅使用验证集的 Attention Residual + 多尺度救援级联。
 
-The policy is evaluated in this fixed order:
+策略按下列固定顺序评估：
 
-1. baseline at 640;
-2. Attention Residual at 640 when the primary model is below threshold;
-3. baseline at 512 and 768 when both earlier stages are below threshold.
+1. baseline@640；
+2. 主模型未过阈值时调用 Attention Residual@640；
+3. 前两级均未过阈值时调用 baseline@512 和 baseline@768。
 
-Thresholds are selected only from the labelled validation set. GW5 scores are
-read after policy selection and are used only for a frozen event-level audit.
+阈值只从带标签验证集选择。GW5 分数在策略冻结后才读取，仅用于冻结的事件级审计。
 """
 
 from __future__ import annotations
@@ -45,7 +44,7 @@ class ScoreRow:
 
 
 def threshold_grid(start: int = 1, stop: int = 60) -> tuple[float, ...]:
-    """Return an exact two-decimal threshold grid."""
+    """返回精确到两位小数的阈值网格。"""
     if start < 0 or stop < start or stop > 100:
         raise ValueError("threshold grid must satisfy 0 <= start <= stop <= 100")
     return tuple(value / 100 for value in range(start, stop + 1))
@@ -227,7 +226,7 @@ def choose_rescue_policy(
     baseline_threshold: float = 0.14,
     attention_threshold: float = 0.36,
 ) -> tuple[dict[str, int | float], list[dict[str, int | float]]]:
-    """Lock the accepted two-stage policy and calibrate only the new stage."""
+    """锁定已接受的两级策略，只校准新增阶段。"""
     rows = list(rows)
     candidates: list[dict[str, int | float]] = []
     best_tp = -1
@@ -255,8 +254,8 @@ def choose_rescue_policy(
     if not candidates:
         raise ValueError("no rescue threshold satisfies the FP constraint")
 
-    # Conservative tie-break: after TP and FP, prefer the highest new-stage
-    # threshold. GW5 is intentionally absent from this ordering.
+    # 保守的并列规则：在 TP 和 FP 相同后，优先选择新增阶段的最高阈值。
+    # 此排序特意不使用 GW5。
     candidates.sort(
         key=lambda item: (
             int(item["fp"]),

@@ -1,9 +1,8 @@
-"""Benchmark a primary-to-secondary chirp inference cascade.
+"""评测主模型到次模型的 chirp 推理级联。
 
-The primary model runs on every image. The secondary model runs only when the
-primary chirp confidence is below the operating threshold. At that threshold,
-the cascade has the same binary decisions as a full OR ensemble while avoiding
-secondary inference for images already accepted by the primary model.
+主模型处理每张图像；仅当主模型的 chirp 置信度低于工作阈值时才调用次模型。
+在该阈值下，级联与完整 OR 融合拥有相同的二元决策，同时避免对已被主模型接受的
+图像执行次模型推理。
 """
 
 from __future__ import annotations
@@ -94,7 +93,7 @@ def classification_metrics_from_decisions(
     decisions: dict[str, bool],
     truth: dict[str, bool],
 ) -> dict[str, int | float]:
-    """Calculate image-level metrics from already calibrated decisions."""
+    """根据已校准的二元决策计算图像级指标。"""
     return classification_metrics(
         {image: float(decisions.get(image, False)) for image in truth},
         truth,
@@ -132,7 +131,7 @@ def event_metrics_from_decisions(
     decisions: dict[str, bool],
     catalogue: dict[str, bool],
 ) -> dict[str, int | float]:
-    """Calculate event recall while preserving the any-detector rule."""
+    """在保持任一探测器命中规则的前提下计算事件召回率。"""
     return event_metrics(
         {image: float(decision) for image, decision in decisions.items()},
         catalogue,
@@ -163,7 +162,7 @@ def asymmetric_decisions(
     primary_threshold: float,
     secondary_threshold: float,
 ) -> dict[str, bool]:
-    """Fuse two models with independently calibrated confidence thresholds."""
+    """使用各自独立校准的置信度阈值融合两个模型。"""
     return {
         image: score >= primary_threshold
         or secondary.get(image, 0.0) >= secondary_threshold
@@ -198,9 +197,8 @@ def predict_scores(
     started = time.perf_counter()
     scores: dict[str, float] = {}
     inference_times: list[float] = []
-    # Ultralytics treats a Python list of image paths as one in-memory batch.
-    # Explicit chunks prevent the accidental full-dataset batch that caused an
-    # attention OOM while still allowing controlled micro-batching.
+    # Ultralytics 会把 Python 图像路径列表视为一个内存批次。显式分块可避免
+    # 意外形成全数据集批次并触发注意力模块 OOM，同时仍允许受控微批处理。
     for source_chunk in chunks(sources, chunk_size):
         source = (
             str(source_chunk[0])

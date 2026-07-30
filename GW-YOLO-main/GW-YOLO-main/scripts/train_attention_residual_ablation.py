@@ -1,15 +1,13 @@
-"""Run a locked multi-seed Attention Residual segmentation ablation.
+"""执行锁定变量、多随机种子的 Attention Residual 分割消融。
 
-The experiment varies only the model topology:
+实验只改变模型拓扑：
 
-- baseline: no extra P3/P4 refinement
-- p4: residual attention on P4 only
-- p3p4: residual attention on P3 and P4
+- baseline：无额外 P3/P4 细化
+- p4：仅在 P4 使用残差注意力
+- p3p4：在 P3 和 P4 使用残差注意力
 
-All training hyperparameters, augmentations, data paths and initialization
-weights are shared so the resulting runs can support an architecture claim.
-Use ``--dry-run`` to audit the complete job matrix without importing
-Ultralytics or starting GPU work.
+所有训练超参数、增强、数据路径和初始化权重均共享，使结果能够支持架构归因。
+使用 ``--dry-run`` 可在不导入 Ultralytics 或启动 GPU 的情况下审计完整任务矩阵。
 """
 
 from __future__ import annotations
@@ -90,7 +88,7 @@ def build_jobs(
 
 
 def normalize_project_path(project: Path) -> Path:
-    """Use an absolute project path so Ultralytics does not prefix runs_dir."""
+    """使用绝对项目路径，避免 Ultralytics 再次前缀 runs_dir。"""
     return project.expanduser().resolve()
 
 
@@ -105,7 +103,7 @@ def locked_train_args(
     epochs: int,
     batch: int,
 ) -> dict[str, object]:
-    """Return the common training contract shared by every topology."""
+    """返回每种拓扑共同遵守的训练契约。"""
     return {
         "data": str(data),
         "epochs": epochs,
@@ -148,14 +146,12 @@ def locked_train_args(
 
 
 def transfer_matching_module_state(source_module, target_module) -> tuple[int, int]:
-    """Transfer locally named tensors with matching shapes between modules.
+    """在模块间迁移局部名称相同且形状匹配的张量。
 
-    Custom refinement blocks move the final Segment26 layer to a different
-    outer index. Ultralytics' normal full-model load cannot match that head by
-    its full state-dict key, even though most tensors inside the head remain
-    compatible. This local remap gives every topology the same compatible
-    pretrained head initialization while leaving class-specific tensors and
-    new attention blocks untouched.
+    自定义细化模块会将最终 Segment26 层移动到不同的外层索引。即使头部多数张量
+    仍兼容，Ultralytics 的常规整模型加载也无法通过完整 state-dict 键匹配该头部。
+    该局部重映射为每种拓扑提供相同的兼容预训练头部初始化，同时不触碰类别特定张量
+    和新增注意力模块。
     """
     source_state = source_module.state_dict()
     target_state = target_module.state_dict()

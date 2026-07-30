@@ -1,7 +1,6 @@
-# YOLO26m segmentation tuned for gravitational-wave time-frequency chirps.
-# Chirps are weak, thin, curved and direction-sensitive. P3 retains trace
-# detail; P4 supplies context. C2PSA residual position-sensitive attention
-# joins separated portions of the same curve while preserving local detail.
+# 针对引力波时频 chirp 调整的 YOLO26m 分割模型。
+# Chirp 微弱、细长、弯曲且具有方向性。P3 保留轨迹细节，P4 提供上下文；C2PSA
+# 残差位置敏感注意力在保留局部细节的同时连接同一曲线的分离部分。
 nc: 2
 end2end: True
 reg_max: 1
@@ -38,9 +37,8 @@ head:
   - [-1, 1, Conv, [512, 3, 2]]
   - [[-1, 10], 1, Concat, [1]]
   - [-1, 1, C3k2, [1024, True, 0.5, True]]
-  # P3 is 80x80 at imgsz=640, so it keeps one self-attention block: enough
-  # for fine trace linking without the quadratic memory cost of a deep stack.
-  # P4 has much lower spatial cost and uses two blocks for curved-track context.
+# 在 imgsz=640 时 P3 为 80×80，因此只保留一个自注意力块：足以连接细轨迹，
+# 同时避免深层堆叠的二次显存代价。P4 的空间成本更低，使用两个块提供弯曲轨迹上下文。
   - [16, 1, C2PSA, [256]]
   - [19, 2, C2PSA, [512]]
   - [[23, 24, 22], 1, Segment26, [nc, 32, 256]]

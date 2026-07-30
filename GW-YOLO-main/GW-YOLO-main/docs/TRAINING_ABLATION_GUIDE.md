@@ -110,5 +110,14 @@ conda run -n yolo python scripts/train_attention_residual_ablation.py `
 4. 记录训练耗时、最佳 epoch、参数量、推理延迟和峰值显存。
 5. 每个结构报告三种子的均值、标准差和全部原始值。
 
+将每个种子的固定验证、GW5 盲评与负集审计合并为带 `model` 列的 CSV 后，使用以下命令
+拒绝不完整种子并生成结构汇总：
+
+```powershell
+python scripts/summarize_ablation.py `
+  --input docs/experiments/ablation/all_seed_audits.csv `
+  --output docs/experiments/ablation/summary.json
+```
+
 在上述结果完成前，不得用单次最好权重宣称 Attention Residual 带来结构改进。生产默认
 仍保持 baseline@0.20；现有非对称级联仅作为高召回研究策略。

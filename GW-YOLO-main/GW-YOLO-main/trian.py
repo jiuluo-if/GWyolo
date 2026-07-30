@@ -1,4 +1,4 @@
-"""Train the chirp-aware segmentation model without touching baseline runs."""
+"""训练 chirp 感知分割模型，且不覆盖既有 baseline 实验。"""
 
 from pathlib import Path
 
@@ -7,8 +7,8 @@ from ultralytics import YOLO
 
 MODEL_CONFIG = Path("configs/yolo26m-chirp-attn-seg.yaml")
 PRETRAINED_WEIGHTS = Path("yolo26m-seg.pt")
-# All artifacts are nested here. `exist_ok=False` makes Ultralytics create an
-# incremented run directory rather than overwrite an earlier experiment.
+# 全部产物写入该目录。`exist_ok=False` 会让 Ultralytics 创建递增的运行目录，
+# 而非覆盖先前实验。
 OUTPUT_PROJECT = Path("segment_new")
 RUN_NAME = "chirp_c2psa"
 
@@ -21,11 +21,10 @@ def main():
         data="gw_data.yaml",
         epochs=300,
         imgsz=640,
-        # Segmentation at 640 plus position-sensitive attention is memory
-        # intensive. A small physical batch keeps the high-resolution chirp
-        # detail; Ultralytics compensates with gradient accumulation.
+        # 640 分割与位置敏感注意力占用显存较高。较小的物理批次保留高分辨率
+        # chirp 细节；Ultralytics 会以梯度累积补偿有效批次大小。
         batch=2,
-        workers=0,  # Windows multiprocessing safety
+        workers=0,  # Windows 多进程兼容性
         optimizer="AdamW",
         lr0=0.002,
         lrf=0.01,
@@ -34,18 +33,18 @@ def main():
         weight_decay=0.0005,
         cls=1.5,
         box=8.0,
-        mask_ratio=2,  # retain detail in thin chirp masks
+        mask_ratio=2,  # 保留细长 chirp 掩膜的细节
         overlap_mask=True,
         amp=True,
-        # Shift and scale are physically plausible; large composite images and
-        # pixel erasing make a faint continuous chirp harder to learn.
+        # 平移和缩放符合物理图像变化；过强的拼接和像素擦除会让微弱连续的
+        # chirp 更难学习。
         mosaic=0.35,
         close_mosaic=20,
         mixup=0.05,
         translate=0.08,
         scale=0.20,
         erasing=0.15,
-        # Do not reverse or rotate the time-frequency sweep direction.
+        # 不反转或旋转时频扫频方向。
         degrees=0.0,
         flipud=0.0,
         fliplr=0.0,
@@ -58,7 +57,7 @@ def main():
         name=RUN_NAME,
         exist_ok=False,
     )
-    print(f"Training complete. Best weights are saved in: {results.save_dir}")
+    print(f"训练完成，最佳权重保存于：{results.save_dir}")
 
 
 if __name__ == "__main__":

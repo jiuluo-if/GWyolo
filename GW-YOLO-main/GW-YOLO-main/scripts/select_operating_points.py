@@ -1,4 +1,4 @@
-"""Select Pareto-efficient GW5 operating points under explicit cost budgets."""
+"""在明确成本预算下选择 Pareto 有效的 GW5 工作点。"""
 
 from __future__ import annotations
 
@@ -59,7 +59,7 @@ def read_summary(path: Path) -> list[dict[str, object]]:
 
 
 def dominates(left: dict[str, object], right: dict[str, object]) -> bool:
-    """Return true when left is no worse on all objectives and better on one."""
+    """当 left 在所有目标不差且至少一项更好时返回真。"""
     left_values = (
         float(left["event_recall"]),
         -float(left["detector_image_hit_rate"]),
