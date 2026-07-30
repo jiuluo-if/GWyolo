@@ -7,7 +7,8 @@
 当前差异不能严格归因于 Attention Residual 结构。
 
 `scripts/train_attention_residual_ablation.py` 用完全一致的训练变量生成三种结构、
-三个随机种子的受控实验，为后续均值、标准差和结构归因提供权重。
+三个随机种子的受控实验，为后续均值、标准差和结构归因提供权重。正式版还会冻结
+数据、模型配置和预训练权重的内容指纹，并支持中断后安全续训。
 
 ## 实验矩阵
 
@@ -17,7 +18,8 @@
 | `p4` | `configs/yolo26m-chirp-p4-attn-seg.yaml` | 仅 P4 增加 2 个 C2PSA |
 | `p3p4` | `configs/yolo26m-chirp-attn-seg.yaml` | P3 增加 1 个、P4 增加 2 个 C2PSA |
 
-默认种子为 `0,1,2`，共 9 个训练任务。三种配置都保留 YOLO26m 原始 P5 C2PSA；
+默认种子为 `0,1,2`，共 9 个训练任务，并按种子交错执行三种结构以减小长跑时间顺序
+偏置。三种配置都保留 YOLO26m 原始 P5 C2PSA；
 本消融比较的是额外 P3/P4 Attention Residual。
 
 ## 锁定训练变量
@@ -45,27 +47,37 @@
 ## 先审计计划
 
 ```powershell
-python scripts/train_attention_residual_ablation.py --dry-run
+& C:\miniconda3\envs\yolo\python.exe scripts/train_attention_residual_ablation.py --dry-run
 ```
 
-`--dry-run` 不导入 Ultralytics、不启动 GPU，也不写入训练目录，会打印全部 9 个任务和
-锁定参数。正式训练前应保存终端输出并确认数据、权重和输出盘空间。
+`--dry-run` 不导入 Ultralytics、不启动 GPU，也不写入训练目录，会打印全部 9 个任务、
+锁定参数以及以下 SHA-256：
+
+- `gw_data.yaml` 与其引用的训练/验证图像、标签；
+- 三种模型 YAML；
+- `yolo26m-seg.pt`。
+
+正式训练前应保存终端输出并确认图像数为 414（331 训练 + 83 验证）、标签数为 414、
+权重路径和输出盘空间正确。`labels.cache` 不进入数据指纹，避免缓存刷新破坏续训。
 
 ## 正式训练
 
 ```powershell
-conda run -n yolo python scripts/train_attention_residual_ablation.py
+$env:PYTHONUTF8 = "1"
+& C:\miniconda3\envs\yolo\python.exe scripts/train_attention_residual_ablation.py
 ```
 
 训练入口会先把 `--project` 规范化为绝对路径，避免当前 Ultralytics 对相对 project
 再次附加默认 `runs/segment`。因此实验清单、目录冲突检查和真实 `save_dir` 必须位于
-同一项目根目录；如三者不一致，应停止任务并检查运行环境。
+同一项目根目录；脚本会显式核对真实 `save_dir`，不一致时立即停止。直接调用 `yolo`
+环境解释器并启用 UTF-8，也可避开当前机器上 `conda run` 回显中文日志时的 GBK 问题。
 
 默认输出：
 
 ```text
-runs/segment/attention_residual_ablation/
+runs/segment/attention_residual_ablation_formal_v1/
   experiment_manifest.json
+  training_status.json
   baseline-seed0/
   baseline-seed1/
   baseline-seed2/
@@ -77,14 +89,24 @@ runs/segment/attention_residual_ablation/
   p3p4-seed2/
 ```
 
-脚本拒绝复用任何已存在的目标目录，防止续跑或覆盖造成实验口径混合。
+每个成功任务还会写入 `training_complete.json`。脚本默认拒绝复用任何已存在的目标
+目录，防止覆盖造成实验口径混合；实验意外中断时，不删除目录，使用：
+
+```powershell
+$env:PYTHONUTF8 = "1"
+& C:\miniconda3\envs\yolo\python.exe scripts/train_attention_residual_ablation.py --resume
+```
+
+续训会重新计算全部内容指纹并要求其与 `experiment_manifest.json` 完全一致，跳过同时
+具有完成标记和 `best.pt` 的任务，从其余任务的 `weights/last.pt` 恢复。已有目录若既
+没有完成标记也没有 `last.pt`，脚本会停止并要求人工审计，不会猜测或覆盖。
 
 ## 分批训练
 
 显存或时间受限时可逐任务执行：
 
 ```powershell
-conda run -n yolo python scripts/train_attention_residual_ablation.py `
+& C:\miniconda3\envs\yolo\python.exe scripts/train_attention_residual_ablation.py `
   --variants p4 `
   --seeds 0
 ```
@@ -92,13 +114,14 @@ conda run -n yolo python scripts/train_attention_residual_ablation.py `
 也可一次训练一个结构：
 
 ```powershell
-conda run -n yolo python scripts/train_attention_residual_ablation.py `
+& C:\miniconda3\envs\yolo\python.exe scripts/train_attention_residual_ablation.py `
   --variants baseline `
   --seeds 0,1,2
 ```
 
-分批运行时应为不同批次指定不同 `--project`。脚本同时拒绝覆盖已有任务目录和
-`experiment_manifest.json`；不得删除旧结果后复用同名目录。
+分批运行时应为不同批次指定不同 `--project`。同一批次中断后必须用同样的
+`--variants`、`--seeds`、`--epochs`、`--batch` 和 `--project` 加 `--resume`；不得
+删除旧结果后复用同名目录。
 
 ## 训练后评估要求
 
@@ -106,7 +129,8 @@ conda run -n yolo python scripts/train_attention_residual_ablation.py `
 
 1. 固定验证集 box/mask 总体与 chirp 逐类指标。
 2. GW5 事件级召回：排除质量不完整事件，H1/L1/V1 任一图像命中即召回。
-3. 在验证集上独立校准阈值，GW5 不参与选参。
+3. 在验证集上独立校准阈值；旧模型的 0.14/0.36/0.15/0.07 只能作为历史参考，
+   新权重必须重新校准，GW5 不参与选参。
 4. 记录训练耗时、最佳 epoch、参数量、推理延迟和峰值显存。
 5. 每个结构报告三种子的均值、标准差和全部原始值。
 
@@ -119,5 +143,7 @@ python scripts/summarize_ablation.py `
   --output docs/experiments/ablation/summary.json
 ```
 
-在上述结果完成前，不得用单次最好权重宣称 Attention Residual 带来结构改进。生产默认
-仍保持 baseline@0.20；现有非对称级联仅作为高召回研究策略。
+在上述结果完成前，不得用单次最好权重宣称 Attention Residual 带来结构改进。训练后
+还必须在时间隔离纯负集上报告 FP 与 `false alarms/day`。生产默认仍保持旧
+baseline@0.20；现有尺度共识级联仅作为旧权重的高召回研究策略，不能直接把其阈值
+套到新权重。
