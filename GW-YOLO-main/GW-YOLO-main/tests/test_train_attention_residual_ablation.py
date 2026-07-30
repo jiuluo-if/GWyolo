@@ -1,20 +1,32 @@
 from __future__ import annotations
 
 import argparse
+import json
 import tempfile
 import unittest
 from pathlib import Path
 
 from scripts.train_attention_residual_ablation import (
+    COMPLETION_NAME,
     DEFAULT_SEEDS,
     DEFAULT_VARIANTS,
+    EXPECTED_HEAD_TRANSFER,
+    atomic_write_json,
     build_jobs,
+    completed_job,
+    dataset_snapshot,
+    initial_status,
+    load_or_create_manifest,
     locked_train_args,
     normalize_project_path,
+    resumable_checkpoint,
     seed_list,
     transfer_matching_module_state,
     validate_inputs,
+    validate_resume_state,
     variant_list,
+    verify_head_transfer,
+    verify_save_dir,
     write_manifest,
 )
 
@@ -25,6 +37,8 @@ class AttentionResidualTrainingTests(unittest.TestCase):
         self.assertEqual(len(jobs), 9)
         self.assertEqual(len({job.run_name for job in jobs}), 9)
         self.assertEqual(jobs[0].run_name, "baseline-seed0")
+        self.assertEqual(jobs[1].run_name, "p4-seed0")
+        self.assertEqual(jobs[3].run_name, "baseline-seed1")
         self.assertEqual(jobs[-1].run_name, "p3p4-seed2")
 
     def test_locked_arguments_preserve_chirp_direction(self) -> None:
@@ -117,6 +131,97 @@ class AttentionResidualTrainingTests(unittest.TestCase):
             self.assertTrue(path.is_file())
             with self.assertRaises(FileExistsError):
                 write_manifest(project, {"protocol": "replacement"})
+
+    def test_resume_requires_identical_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory) / "experiment"
+            expected = {"protocol": "v2", "jobs": ["baseline-seed0"]}
+            write_manifest(project, expected)
+            path = load_or_create_manifest(project, expected, resume=True)
+            self.assertTrue(path.is_file())
+            with self.assertRaises(ValueError):
+                load_or_create_manifest(
+                    project,
+                    {"protocol": "changed"},
+                    resume=True,
+                )
+
+    def test_resume_state_accepts_last_checkpoint_or_completed_job(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory)
+            jobs = build_jobs(("baseline", "p4"), (0,), project)
+            last = jobs[0].output_dir / "weights" / "last.pt"
+            last.parent.mkdir(parents=True)
+            last.write_bytes(b"checkpoint")
+            best = jobs[1].output_dir / "weights" / "best.pt"
+            best.parent.mkdir(parents=True)
+            best.write_bytes(b"checkpoint")
+            atomic_write_json(
+                jobs[1].output_dir / COMPLETION_NAME,
+                {"completed": True},
+            )
+            validate_resume_state(jobs, resume=True)
+            self.assertEqual(resumable_checkpoint(jobs[0]), last)
+            self.assertTrue(completed_job(jobs[1]))
+
+    def test_resume_state_rejects_unrecoverable_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            jobs = build_jobs(("baseline",), (0,), Path(directory))
+            jobs[0].output_dir.mkdir(parents=True)
+            with self.assertRaises(FileNotFoundError):
+                validate_resume_state(jobs, resume=True)
+
+    def test_dataset_snapshot_ignores_cache_and_detects_content(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "train" / "images").mkdir(parents=True)
+            (root / "train" / "labels").mkdir(parents=True)
+            (root / "val" / "images").mkdir(parents=True)
+            (root / "val" / "labels").mkdir(parents=True)
+            (root / "train" / "images" / "a.png").write_bytes(b"image-a")
+            (root / "train" / "labels" / "a.txt").write_text("0 0.5 0.5")
+            (root / "val" / "images" / "b.png").write_bytes(b"image-b")
+            (root / "val" / "labels" / "b.txt").write_text("0 0.5 0.5")
+            (root / "val" / "labels.cache").write_bytes(b"ignored")
+            data = root / "data.yaml"
+            data.write_text(
+                "\n".join(
+                    [
+                        f"path: {root.as_posix()}",
+                        "train: train/images",
+                        "labels: train/labels",
+                        "val: val",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            first = dataset_snapshot(data)
+            (root / "val" / "labels.cache").write_bytes(b"changed cache")
+            second = dataset_snapshot(data)
+            self.assertEqual(first["dataset_sha256"], second["dataset_sha256"])
+            self.assertEqual(first["image_count"], 2)
+            self.assertEqual(first["label_count"], 2)
+
+    def test_expected_head_transfer_is_enforced(self) -> None:
+        verify_head_transfer(*EXPECTED_HEAD_TRANSFER)
+        with self.assertRaises(RuntimeError):
+            verify_head_transfer(EXPECTED_HEAD_TRANSFER[0] - 1, EXPECTED_HEAD_TRANSFER[1])
+
+    def test_save_dir_must_match_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            expected = Path(directory) / "expected"
+            self.assertEqual(verify_save_dir(expected, expected), expected.resolve())
+            with self.assertRaises(RuntimeError):
+                verify_save_dir(Path(directory) / "nested", expected)
+
+    def test_initial_status_contains_every_job(self) -> None:
+        jobs = build_jobs(("baseline", "p4"), (0,), Path("runs/test"))
+        status = initial_status(jobs)
+        self.assertEqual(
+            set(status["jobs"]),
+            {"baseline-seed0", "p4-seed0"},
+        )
+        json.dumps(status)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,3 @@
+window_id,image,image_hash,start_utc,end_utc,detector,gwtc_veto_passed,time_isolated_verified,human_review_status,human_reviewers,human_reviewed_at,human_review_reason,source_note
+replace_H1_0001,replace_h1_0001,replace_sha256,2026-01-01T00:00:00+00:00,2026-01-01T00:00:04+00:00,H1,false,false,pending,,,,replace with immutable provenance
+replace_L1_0001,replace_l1_0001,replace_sha256,2026-01-01T00:00:00+00:00,2026-01-01T00:00:04+00:00,L1,false,false,pending,,,,replace with immutable provenance

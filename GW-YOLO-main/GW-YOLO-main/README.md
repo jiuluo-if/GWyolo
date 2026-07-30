@@ -4,7 +4,8 @@
 
 当前高召回研究策略为 baseline@640、Attention Residual@640 与 baseline 512/768
 跨尺度一致性的短路级联。固定验证为 69/3/0/11，补图后的 GW5 为 102/104；这不是
-生产结论，生产评估仍缺少时间隔离负集和 `false alarms/day`。
+生产结论。当前 v1 负集只有 1,800 秒网络暴露和两个候选告警，不具备生产 FAR
+发布资格；详见 [当前成果总表](docs/CURRENT_ACHIEVEMENTS.md)。
 
 ## 快速开始
 
@@ -21,20 +22,25 @@
    python trian.py
    ```
 
-4. 在 `predict.py` 顶部修改 `WEIGHTS_PATH`、`SOURCE_PATH`、`OUTPUT_DIR`，再运行：
+4. 显式指定权重、输入和新的输出目录，再运行逐图推理：
 
    ```powershell
-   python predict.py
+   python predict.py `
+     --weights runs/segment/train/weights/best.pt `
+     --source imgs/gw5.0 `
+     --output runs/filtered/predict_gw5_audit
    ```
 
-预测标签将写入 `OUTPUT_DIR/labels`，可视化图像写入 `OUTPUT_DIR/images`。脚本只保留置信度最高的 `chirp`，保留全部 `noise`。
+预测标签写入 `OUTPUT/labels`，可视化图像写入 `OUTPUT/images`，并生成
+`prediction_manifest.json`。无检出图像也会留下空标签；默认拒绝覆盖已有输出。
 
 ## 仓库约定
 
 - `runs/`、模型权重、缓存和本地数据均为运行产物，不应作为常规源码提交。
 - 当前 `trian.py` 是既有训练入口，文件名为历史拼写；后续重构时应迁移为 `scripts/train.py`，并保留兼容入口。
 - 详细的项目上下文、风险点和建议结构见 [docs/PROJECT_MEMORY.md](docs/PROJECT_MEMORY.md)。
-- 批次 00–11 的接受/拒绝决策见 [实验批次索引](docs/experiments/README.md)。
+- 当前全部已完成成果、证据边界和待办见 [当前成果总表](docs/CURRENT_ACHIEVEMENTS.md)。
+- 批次 00–12 的接受/拒绝决策见 [实验批次索引](docs/experiments/README.md)。
 
 ## 建议目标布局
 
@@ -142,16 +148,19 @@ baseline@768 0.07。仅在前三级失败且 512 达到 0.15 时才运行 768。
 先审计锁定变量的 3×3 实验矩阵：
 
 ```powershell
-python scripts/train_attention_residual_ablation.py --dry-run
+& C:\miniconda3\envs\yolo\python.exe scripts/train_attention_residual_ablation.py --dry-run
 ```
 
 正式训练：
 
 ```powershell
-conda run -n yolo python scripts/train_attention_residual_ablation.py
+$env:PYTHONUTF8 = "1"
+& C:\miniconda3\envs\yolo\python.exe scripts/train_attention_residual_ablation.py
 ```
 
 脚本统一比较 baseline、仅 P4 Attention Residual、P3+P4 Attention Residual，
-默认种子为 `0,1,2`，会把 `project` 规范化为绝对路径，并拒绝复用已有输出目录。
+默认种子为 `0,1,2`，会冻结数据、模型配置和预训练权重的 SHA-256，把 `project`
+规范化为绝对路径，并拒绝覆盖已有输出目录。长跑中断后使用相同参数加 `--resume`，
+脚本会核对实验清单并从对应 `weights/last.pt` 恢复。
 1-epoch 三结构烟雾测试已通过，但不能替代正式 300-epoch 多种子实验。完整说明见
 [Attention Residual 锁定变量训练指南](docs/TRAINING_ABLATION_GUIDE.md)。
