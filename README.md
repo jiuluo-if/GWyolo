@@ -1,46 +1,89 @@
 # GW-YOLO
 
-基于 Ultralytics YOLO 的时频图目标分割项目，用于识别两类目标：`chirp` 和 `noise`。
+> 基于 **Ultralytics YOLO** 的引力波时频图目标分割研究项目。
+>
+> 识别类别：`chirp`（啁啾信号）与 `noise`（噪声）。
 
-当前高召回研究策略为 baseline@640、Attention Residual@640 与 baseline 512/768
-跨尺度一致性的短路级联。固定验证为 69/3/0/11，补图后的 GW5 为 102/104；这不是
-生产结论。当前 v1 负集只有 1,800 秒网络暴露和两个候选告警，不具备生产 FAR
-发布资格；详见 [当前成果总表](docs/CURRENT_ACHIEVEMENTS.md)。
+## 项目概览
+
+GW-YOLO 面向引力波 Q-scan 时频图的目标分割与可审计推理。项目当前保留两条互补的研究路线：
+
+| 路线 | 作用 | 当前定位 |
+| --- | --- | --- |
+| `baseline@640` | 主模型、稳定基线 | 冻结的研究与负样本审计基线 |
+| Attention Residual@640 | 互补模型 | 等待完整多种子训练证据 |
+| baseline@512 / @768 | 条件式多尺度救援 | 仅用于冻结后的跨尺度短路级联 |
+
+> [!IMPORTANT]
+> 当前高召回策略在固定验证集达到 **69/3/0/11**，在补齐图像后的 GW5 事件集达到 **102/104**。这些是研究评估结果，**不是生产性能或 FAR 声明**。
+>
+> 现有 v1 负样本审计仅覆盖 1,800 秒网络暴露，并出现 2 个候选告警；它不具备生产 FAR 发布资格。
+
+**快速入口：** [当前成果总表](docs/CURRENT_ACHIEVEMENTS.md) · [文档导航与维护规则](docs/DOCUMENTATION_GUIDE.md) · [实验批次索引](docs/experiments/README.md)
+
+---
 
 ## 快速开始
 
-1. 创建 Python 环境并安装依赖：
+### 1. 安装依赖
 
-   ```powershell
-   python -m pip install -r requirements.txt
-   ```
+```powershell
+python -m pip install -r requirements.txt
+```
 
-2. 按 `gw_data.yaml` 准备数据集。训练图像与标签分别位于 `train/images`、`train/labels`；验证集由 `val` 指向。
-3. 检查 `trian.py` 中的权重、训练参数和 `gw_data.yaml` 的路径后运行：
+### 2. 准备数据
 
-   ```powershell
-   python trian.py
-   ```
+依据 [gw_data.yaml](gw_data.yaml) 配置数据集路径：
 
-4. 显式指定权重、输入和新的输出目录，再运行逐图推理：
+```text
+train/
+├── images/     # 训练图像
+└── labels/     # YOLO 分割标签
 
-   ```powershell
-   python predict.py `
-     --weights runs/segment/train/weights/best.pt `
-     --source imgs/gw5.0 `
-     --output runs/filtered/predict_gw5_audit
-   ```
+val/            # 验证集（由 gw_data.yaml 指向）
+```
 
-预测标签写入 `OUTPUT/labels`，可视化图像写入 `OUTPUT/images`，并生成
-`prediction_manifest.json`。无检出图像也会留下空标签；默认拒绝覆盖已有输出。
+### 3. 训练
+
+检查 [trian.py](trian.py) 中的权重、训练参数和数据集路径后执行：
+
+```powershell
+python trian.py
+```
+
+> `trian.py` 是保留兼容性的历史文件名。新的受控多种子消融训练请使用下文的专用脚本。
+
+### 4. 可审计推理
+
+推理必须显式指定权重、输入与**新的**输出目录：
+
+```powershell
+python predict.py `
+  --weights runs/segment/train/weights/best.pt `
+  --source imgs/gw5.0 `
+  --output runs/filtered/predict_gw5_audit
+```
+
+输出目录中包含：
+
+```text
+predict_gw5_audit/
+├── images/                    # 标注后的可视化图像
+├── labels/                    # 每张输入图像对应的标签（无检出时为空文件）
+└── prediction_manifest.json   # 权重、输入与推理参数清单
+```
+
+模型实例会复用，但始终逐图推理；默认拒绝覆盖既有输出，确保审计结果可追溯。
 
 ## 仓库约定
 
-- `runs/`、模型权重、缓存和本地数据均为运行产物，不应作为常规源码提交。
-- 当前 `trian.py` 是既有训练入口，文件名为历史拼写；后续重构时应迁移为 `scripts/train.py`，并保留兼容入口。
-- 当前全部已完成成果、证据边界和待办见 [当前成果总表](docs/CURRENT_ACHIEVEMENTS.md)。
-- 文档的当前/历史边界及更新顺序见 [文档导航与维护规则](docs/DOCUMENTATION_GUIDE.md)。
-- 批次 00–12 的接受/拒绝决策见 [实验批次索引](docs/experiments/README.md)。
+| 项目 | 约定 |
+| --- | --- |
+| 运行产物 | `runs/`、模型权重、缓存与本地数据不作为常规源码提交 |
+| 训练入口 | `trian.py` 是保留兼容性的历史文件名；后续重构应迁移为 `scripts/train.py` |
+| 当前结论 | 以 [当前成果总表](docs/CURRENT_ACHIEVEMENTS.md) 为准 |
+| 文档维护 | 参阅 [文档导航与维护规则](docs/DOCUMENTATION_GUIDE.md) |
+| 实验决策 | 批次 00–12 的接受/拒绝记录见 [实验批次索引](docs/experiments/README.md) |
 
 ## 建议目标布局
 
@@ -55,9 +98,24 @@ docs/             # 项目说明与实验记录
 
 当前代码仍保留原始路径，避免破坏正在使用的训练与推理流程。
 
+---
+
+## 当前研究状态
+
+| 项目 | 已有证据 | 结论边界 |
+| --- | --- | --- |
+| GW5 事件级评估 | 102/104；H1/L1/V1 任一图像检出 class 0 `chirp` 即召回，排除质量字段 `--` | 不是独立纯负集，不能推导 FPR/FAR |
+| 跨尺度短路级联 | baseline640 → Attention640 → baseline512 → 条件 baseline768；GW5 实测 33.55 秒 | 参数由固定验证集选择，GW5 只作策略冻结后的评估 |
+| Attention Residual | 已完成 1-epoch、三结构烟雾测试 | 尚未完成 3 结构 × 3 种子 × 300 epoch 正式训练 |
+| v1 时间隔离负集 | 450 个 H1/L1 同步四秒窗口，2 个候选告警 | 候选率证据，不是可发布的生产 FAR |
+
+完整证据、已拒绝结论与待办事项请阅读 [当前成果总表](docs/CURRENT_ACHIEVEMENTS.md)。
+
 ## 可复现实验
 
-固定验证集对比：
+> 阈值只能依据固定验证集校准；GW5 用于策略冻结后的事件级评估。每个实验批次的完整输入与产物见 [实验批次索引](docs/experiments/README.md)。
+
+### 固定验证集对比
 
 ```powershell
 python scripts/benchmark_validation.py `
@@ -66,7 +124,7 @@ python scripts/benchmark_validation.py `
   --output-dir docs/experiments/batch_00_validation
 ```
 
-GW5 多尺度与模型后融合：
+### GW5 多尺度与模型后融合
 
 ```powershell
 python scripts/benchmark_gw5.py `
@@ -76,7 +134,7 @@ python scripts/benchmark_gw5.py `
   --output-dir docs/experiments/batch_01_inference
 ```
 
-成本约束工作点选择：
+### 成本约束工作点选择
 
 ```powershell
 python scripts/select_operating_points.py `
@@ -87,7 +145,7 @@ python scripts/select_operating_points.py `
   --output-dir docs/experiments/batch_02_calibration
 ```
 
-验证阴性代理与按需级联：
+### 验证阴性代理与按需级联
 
 ```powershell
 python scripts/benchmark_cascade.py `
@@ -100,11 +158,9 @@ python scripts/benchmark_cascade.py `
   --output-dir runs/optimization_cascade_fp16
 ```
 
-当前结论与研究边界见
-[完整优化报告](docs/FINAL_OPTIMIZATION_REPORT.md) 和
-[项目研究报告](docs/FINAL_RESEARCH_REPORT.md)。
+当前结论与研究边界以 [当前成果总表](docs/CURRENT_ACHIEVEMENTS.md) 为准；批次原始产物请从 [实验批次索引](docs/experiments/README.md) 进入。
 
-Attention Residual 非对称阈值校准：
+### Attention Residual 非对称阈值校准
 
 ```powershell
 python scripts/calibrate_attention_fusion.py `
@@ -118,7 +174,7 @@ python scripts/calibrate_attention_fusion.py `
 `--operating-threshold 0.14 --secondary-threshold 0.36`；阈值选择只使用验证集，
 GW5 只用于冻结策略后的事件级评估。
 
-跨尺度一致性校准：
+### 跨尺度一致性校准
 
 ```powershell
 python scripts/calibrate_scale_consensus.py `
@@ -129,7 +185,7 @@ python scripts/calibrate_scale_consensus.py `
   --output-dir docs/experiments/batch_09_scale_consensus
 ```
 
-当前短路策略实测：
+### 当前短路策略实测
 
 ```powershell
 conda run -n yolo python scripts/benchmark_scale_consensus_cascade.py `
@@ -145,22 +201,41 @@ baseline@768 0.07。仅在前三级失败且 512 达到 0.15 时才运行 768。
 
 ## Attention Residual 多种子训练
 
-先审计锁定变量的 3×3 实验矩阵：
+先检查锁定变量的 3×3 实验矩阵：
 
 ```powershell
 & C:\miniconda3\envs\yolo\python.exe scripts/train_attention_residual_ablation.py --dry-run
 ```
 
-正式训练：
+确认后启动正式训练：
 
 ```powershell
 $env:PYTHONUTF8 = "1"
 & C:\miniconda3\envs\yolo\python.exe scripts/train_attention_residual_ablation.py
 ```
 
-脚本统一比较 baseline、仅 P4 Attention Residual、P3+P4 Attention Residual，
-默认种子为 `0,1,2`，会冻结数据、模型配置和预训练权重的 SHA-256，把 `project`
-规范化为绝对路径，并拒绝覆盖已有输出目录。长跑中断后使用相同参数加 `--resume`，
-脚本会核对实验清单并从对应 `weights/last.pt` 恢复。
-1-epoch 三结构烟雾测试已通过，但不能替代正式 300-epoch 多种子实验。完整说明见
-[Attention Residual 锁定变量训练指南](docs/TRAINING_ABLATION_GUIDE.md)。
+脚本统一比较 baseline、仅 P4 Attention Residual、P3+P4 Attention Residual，默认种子为 `0,1,2`。它会冻结数据、模型配置和预训练权重的 SHA-256，把 `project` 规范化为绝对路径，并拒绝覆盖已有输出目录。长跑中断后使用相同参数加 `--resume`，脚本会核对实验清单并从对应 `weights/last.pt` 恢复。
+
+> [!NOTE]
+> 1-epoch 三结构烟雾测试已通过，但不能替代正式 300-epoch 多种子实验。完整说明见 [Attention Residual 锁定变量训练指南](docs/TRAINING_ABLATION_GUIDE.md)。
+
+---
+
+## 文档地图
+
+| 想了解什么 | 阅读入口 |
+| --- | --- |
+| 当前可对外陈述的结果、证据与限制 | [CURRENT_ACHIEVEMENTS.md](docs/CURRENT_ACHIEVEMENTS.md) |
+| 文档层级、历史材料与更新规则 | [DOCUMENTATION_GUIDE.md](docs/DOCUMENTATION_GUIDE.md) |
+| 批次实验的输入、输出与接受决策 | [experiments/README.md](docs/experiments/README.md) |
+| 正式多种子消融训练 | [TRAINING_ABLATION_GUIDE.md](docs/TRAINING_ABLATION_GUIDE.md) |
+| 时间隔离负样本与 FAR 口径 | [TIME_ISOLATED_NEGATIVE_AUDIT.md](docs/TIME_ISOLATED_NEGATIVE_AUDIT.md) |
+
+---
+
+## 研究与发布原则
+
+- 不将 GW5 图像命中解释为 FPR 或 FAR。
+- 不在负样本审计集上重新选择阈值。
+- 不以单个 seed 或 1-epoch 烟雾测试作为结构收益结论。
+- 推理保留逐图、空标签和清单输出，确保输入覆盖与结果可审计。
