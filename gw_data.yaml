@@ -1,11 +1,11 @@
-path: F:\python\yolo\GW-YOLO-main\GW-YOLO-main
+path: .
 train:
-  - train\images
+  - train/images
 #  - train\2nd\images\train
 labels:
-  - train\labels
+  - train/labels
 #  - train\2nd\labels
-val: val\val_3.0
+val: val/val_3.0
 
 nc: 2
 

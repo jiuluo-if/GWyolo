@@ -1,49 +1,48 @@
+"""Display segmentation masks with randomly assigned colors."""
+
+import argparse
+from pathlib import Path
+
 import cv2
 import numpy as np
-from ultralytics import YOLO
 
 
-path = r"F:\python\yolo\GW-YOLO-main\GW-YOLO-main\runs\segment\train3\weights\best.pt"
-img_path = r"F:\python\yolo\GW-YOLO-main\GW-YOLO-main\train\images\1251930624_def6bd39b9a44cd065c913c306ee5d20_0_L1_png.rf.76a0c0dda0d75c6df3f62be298d96a55.jpg"
-# 加载模型
-model = YOLO(path)
+def show_masks(weights: Path, image: Path) -> None:
+    """Run segmentation for one image and display the annotated result."""
+    from ultralytics import YOLO
 
-# 读取图像
-img = cv2.imread(img_path)
-h, w = img.shape[:2]
+    model = YOLO(weights)
+    img = cv2.imread(str(image))
+    if img is None:
+        raise FileNotFoundError(f"Unable to read image: {image}")
 
-# 执行预测
-results = model(img)
+    results = model(img)
+    if results[0].masks is None:
+        cv2.imshow("Detection", results[0].plot())
+    else:
+        masks = results[0].masks.data.cpu().numpy()
+        boxes = results[0].boxes
+        color_mask = np.zeros_like(img)
 
-# 用彩色掩码“涂抹”结果
-if results[0].masks is not None:
-    masks = results[0].masks.data.cpu().numpy()
-    boxes = results[0].boxes
-    color_mask = np.zeros((h, w, 3), dtype=np.uint8)
+        for index, mask in enumerate(masks):
+            color = np.random.randint(0, 255, 3).tolist()
+            color_mask[(mask * 255).astype(np.uint8) > 128] = color
+            x1, y1, x2, y2 = map(int, boxes.xyxy[index])
+            cls = int(boxes.cls[index])
+            conf = float(boxes.conf[index])
+            cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+            cv2.putText(img, f"{model.names[cls]} {conf:.2f}", (x1, y1 - 5),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-    for i, mask in enumerate(masks):
-        # 随机生成颜色
-        color = np.random.randint(0, 255, 3).tolist()
-        mask_255 = (mask * 255).astype(np.uint8)
-        # 将颜色填充到目标轮廓内
-        color_mask[mask_255 > 128] = color
+        cv2.imshow("Colorful Masks", cv2.addWeighted(img, 0.5, color_mask, 0.5, 0))
 
-        # 可选：添加边界框和标签
-        x1, y1, x2, y2 = map(int, boxes.xyxy[i])
-        cls = int(boxes.cls[i])
-        conf = float(boxes.conf[i])
-        cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
-        cv2.putText(img, f"{model.names[cls]} {conf:.2f}", (x1, y1 - 5),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-
-    # 半透明混合
-    blended = cv2.addWeighted(img, 0.5, color_mask, 0.5, 0)
-    cv2.imshow("Colorful Masks", blended)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-else:
-     # 若无掩码，则回退到仅绘制检测框
-    annotated = results[0].plot()
-    cv2.imshow("Detection", annotated)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Display colorful masks for a segmentation result.")
+    parser.add_argument("weights", type=Path, help="Path to model weights")
+    parser.add_argument("image", type=Path, help="Path to input image")
+    args = parser.parse_args()
+    show_masks(args.weights, args.image)

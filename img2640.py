@@ -1,10 +1,8 @@
-import cv2
-import numpy as np
+import argparse
 from pathlib import Path
 
-
-images_original = r"F:\img\gw5.0" # 原始文件夹
-images_640 = r"F:\python\yolo\GW-YOLO-main\GW-YOLO-main\imgs\gw5.0" # 输出文件夹
+import cv2
+import numpy as np
 
 
 # letterbox
@@ -61,7 +59,9 @@ def batch_convert(input_dir, output_dir, target_size=640, extensions=('.jpg', '.
 
 
 if __name__ == '__main__':
-    # 修改路径
-    input_folder = images_original
-    output_folder = images_640
-    batch_convert(input_folder, output_folder)
+    parser = argparse.ArgumentParser(description="Resize all images in a directory to square images.")
+    parser.add_argument("input_dir", type=Path, help="Directory containing source images")
+    parser.add_argument("output_dir", type=Path, help="Directory for converted images")
+    parser.add_argument("--size", type=int, default=640, help="Output width and height (default: 640)")
+    args = parser.parse_args()
+    batch_convert(args.input_dir, args.output_dir, args.size)
