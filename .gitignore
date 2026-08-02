@@ -1,46 +1,63 @@
-# Python
+# Python、虚拟环境与工具缓存
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.so
-*.egg
+*.py[cod]
 *.egg-info/
-dist/
-build/
-
-# 虚拟环境
 .venv/
 venv/
 env/
-ENV/
+.conda/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
 
-# YOLO / Ultralytics 相关
+# 本地数据、模型与运行产物（不上传）
+imgs/
+train/
+val/
+runs/
+result/
+output/
+tmp/
+data/
+datasets/
+Ultralytics/
 ultralytics-main/
 ultralytics26-main/
-datasets/
+ultralytics-main/
+ultralytics26-main/
+*.cache
 *.pt
 *.pth
+*.ckpt
 *.onnx
 *.engine
 *.weights
-
-# IDE / 编辑器
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# 大文件
+*.tflite
+*.log
 *.zip
 *.tar
-*.gz
+*.tar.gz
+*.tgz
 *.rar
 *.7z
 *.mp4
 *.avi
-*.jpg
-*.png
+*.mov
+
+# 内部项目记忆与原嵌套工作目录（仅本地保留）
+docs/PROJECT_MEMORY.md
+GW-YOLO-main/
+
+# 本地工具与编辑器状态
+.agents/
+.codex/
+.nature-figure-backend.json
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

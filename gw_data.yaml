@@ -1,0 +1,12 @@
+path: .
+train:
+  - train/images
+#  - train\2nd\images\train
+labels:
+  - train/labels
+#  - train\2nd\labels
+val: val/val_3.0
+
+nc: 2
+
+names: ['chirp', 'noise']
